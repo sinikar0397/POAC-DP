@@ -1,10 +1,13 @@
 from encode import parse_unitime as parse_unitime
 from POGA_DP import poga_dp_framework as poga_dp
+from POAC_DP import poac_dp_framework as poac_dp
+import pandas as pd
+import pickle
 
-fname='2019_Early_01'
-datapath='./data/dataset_itc2019/'+fname+'.xml'
-data=parse_unitime(datapath)
-schedule, room = poga_dp(data, fname)
-print(schedule)
-
-
+fnames=['2019_Early_{0:02d}'.format(i) for i in range(1, 10) if (i!=4)]
+fnames.append('2019_Late_01')
+for fname in fnames:
+    data=parse_unitime('./data/dataset_itc2019/'+fname+'.xml')
+    room_info = {rid: info['capacity'] for rid, info in data['rooms'].items()}
+    with open('./result/parsed_data/'+fname+'.pickle', 'wb') as f:
+        pickle.dump(room_info, f, pickle.HIGHEST_PROTOCOL)

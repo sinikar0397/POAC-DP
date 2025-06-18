@@ -13,7 +13,7 @@ POPULATION_SIZE = 30
 GENERATIONS = 100
 MUTATION_RATE = 0.1
 SWAP_RATE = 0.3
-MAX_MUTATION_ATTEMPTS = 10
+MAX_MUTATION_ATTEMPTS = 5
 
 
 def poga_dp_framework(data, fname):
@@ -30,7 +30,7 @@ def poga_dp_framework(data, fname):
         fitness_scores = [(schedule, fitness(schedule, data)) for schedule in population]
         fitness_scores.sort(key=lambda x: x[1])
         best_schedule, best_score = fitness_scores[0]
-        print(f"Gen {generation} - Best Score: {best_score}")
+        print(f"POGA-DP, {fname}, Gen {generation} - min Loss: {best_score}")
         best_scores.append(best_score)
 
         new_population = [best_schedule]
@@ -41,21 +41,23 @@ def poga_dp_framework(data, fname):
         population = new_population
 
     plt.plot(best_scores)
-    plt.title("Best Score per Generation")
+    plt.title("Best Score per Generation by POGA-DP with data '{}'".format(fname))
     plt.xlabel("Generation")
     plt.ylabel("Best Score")
     plt.grid(True)
+    plt.savefig('./result/image/POGA-DP_'+fname+'.png')
     plt.show()
-    plt.savefig('./result/image/'+fname+'.png')
+    ser=pd.Series(best_scores)
+    ser.to_csv('./result/image/POGA-DP_'+fname+'.csv')
 
     final_schedule = population[0]
     final_room_assignment = dp_room_assignment(final_schedule, data)
     check_hard_constraints(final_schedule, final_room_assignment, data)
-    export_schedule(final_schedule, final_room_assignment, data)
+    export_schedule(final_schedule, final_room_assignment, data, fname)
     return final_schedule, final_room_assignment
 
 
-def export_schedule(schedule, room_assignment, data, filename='schedule.csv'):
+def export_schedule(schedule, room_assignment, data, filename='dummy'):
     records = []
     for (dept_id, course_id), slots in schedule.items():
         rooms = room_assignment[(dept_id, course_id)]
@@ -68,8 +70,8 @@ def export_schedule(schedule, room_assignment, data, filename='schedule.csv'):
                 'Students': data['courses'][course_id].get('students', 0)
             })
     df = pd.DataFrame(records)
-    df.to_csv(filename, index=False)
-    print(f"Schedule exported to {filename}")
+    df.to_csv('./result/schedule/'+'POGA-DP_'+filename+'.csv', index=False)
+    print(f"Schedule exported to {'./result/schedule/DP_'+filename+'.csv'}")
 
 
 def generate_random_schedule(course_list, data):
@@ -146,17 +148,17 @@ def dp_room_assignment(schedule, data):
     return room_assignment
 
 def check_hard_constraints(schedule, room_assignment, data):
-    print("\n--- Hard Constraint Violation Report ---")
+    # print("\n--- Hard Constraint Violation Report ---")
 
     capacity_violations = 0
     for (dept_id, course_id), rooms in room_assignment.items():
         students = data['courses'][course_id].get('students', 0)
         for room_id in rooms:
             if room_id is None:
-                print(f"Room not assigned for course {course_id}")
+                # print(f"Room not assigned for course {course_id}")
                 capacity_violations += 1
             elif data['rooms'][room_id]['capacity'] < students:
-                print(f"Capacity violation: course {course_id}, room {room_id}")
+                # print(f"Capacity violation: course {course_id}, room {room_id}")
                 capacity_violations += 1
 
     overlap_counter = defaultdict(list)
@@ -169,7 +171,7 @@ def check_hard_constraints(schedule, room_assignment, data):
     overlap_violations = 0
     for key, assigned_courses in overlap_counter.items():
         if len(assigned_courses) > 1:
-            print(f"Room conflict at slot {key[0]}, room {key[1]}: courses {assigned_courses}")
+            # print(f"Room conflict at slot {key[0]}, room {key[1]}: courses {assigned_courses}")
             overlap_violations += 1
 
     if capacity_violations == 0 and overlap_violations == 0:
