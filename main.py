@@ -8,6 +8,4 @@ fnames=['2019_Early_{0:02d}'.format(i) for i in range(1, 10) if (i!=4)]
 fnames.append('2019_Late_01')
 for fname in fnames:
     data=parse_unitime('./data/dataset_itc2019/'+fname+'.xml')
-    room_info = {rid: info['capacity'] for rid, info in data['rooms'].items()}
-    with open('./result/parsed_data/'+fname+'.pickle', 'wb') as f:
-        pickle.dump(room_info, f, pickle.HIGHEST_PROTOCOL)
+    poac_dp(data, fname+'(pheromone_ver1_4)')
